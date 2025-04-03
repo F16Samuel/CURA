@@ -143,5 +143,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Adjust based on your React dev server
     "http://localhost:5174"
 ]
-
+    
 DEBUG = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
+    ),
+}

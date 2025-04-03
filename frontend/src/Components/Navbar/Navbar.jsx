@@ -5,22 +5,32 @@ import "./Navbar.css";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null); // Track logged-in user
+  const [user, setUser] = useState(null);
 
   // Fetch user data from backend on mount
   useEffect(() => {
     const fetchUser = async () => {
+      const token = localStorage.getItem("access_token");  // Retrieve token from localStorage
+      if (!token) {
+        console.warn("No access token found");
+        return;
+      }
+
       try {
-        const response = await fetch("http://your-backend-url.com/api/user", {
+        const response = await fetch("http://localhost:8000/current-user/", {
           method: "GET",
-          credentials: "include", // Ensures cookies (if used) are sent
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,  // Attach token for authentication
+          },
+          credentials: "include",
         });
 
-        if (!response.ok) throw new Error("Failed to fetch user data");
+        if (!response.ok) throw new Error(`Failed to fetch user data, Status: ${response.status}`);
 
         const userData = await response.json();
         setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData)); // Store in localStorage
+        localStorage.setItem("user", JSON.stringify(userData)); // Store user in localStorage
       } catch (error) {
         console.error("Error fetching user:", error);
         setUser(null);
@@ -35,19 +45,25 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Logout user and remove session from backend
+  // Logout function
   const handleLogout = async () => {
     try {
-      await fetch("http://your-backend-url.com/api/logout", {
+      const token = localStorage.getItem("access_token");
+      await fetch("http://localhost:8000/api/logout/", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
       });
+
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      setUser(null);
     } catch (error) {
       console.error("Error logging out:", error);
     }
-
-    localStorage.removeItem("user");
-    setUser(null);
   };
 
   return (

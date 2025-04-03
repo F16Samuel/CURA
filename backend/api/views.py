@@ -70,14 +70,21 @@ class LoginView(APIView):
 
         print("❌ Invalid credentials")
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+    
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+from django.utils.decorators import method_decorator
 
+@method_decorator(csrf_exempt, name='dispatch')
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
+        response = Response(serializer.data, status=status.HTTP_200_OK)
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
 
 class ConsultationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -92,3 +99,21 @@ class ConsultationView(APIView):
             return Response({"success": True, "message": "Consultation submitted successfully!"}, status=status.HTTP_201_CREATED)
         
         return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from .serializers import UserSerializer
+
+User = get_user_model()
+
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = UserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
