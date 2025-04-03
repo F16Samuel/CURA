@@ -18,58 +18,82 @@ from .models import CustomUser
 from django.contrib.auth.hashers import make_password
 from .serializers import UserSerializer
 
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
+from django.contrib.auth import login, authenticate, logout
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import get_user_model
+from .serializers import UserSerializer
 
+User = get_user_model()
+
+class RegisterView(APIView):
     def post(self, request):
         data = request.data
 
-        # Validate required fields
         if "email" not in data or "password" not in data:
-            return Response({"error": "Email and Password are required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if email already exists
-        if CustomUser.objects.filter(email=data["email"]).exists():
+        if User.objects.filter(email=data["email"]).exists():
             return Response({"error": "Email already in use!"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = CustomUser.objects.create(
-                username=data["email"],  # Use email as username
-                email=data["email"],
-                role=data.get("role", "patient"),
-                hospital=data.get("hospital", ""),
-                password=make_password(data["password"]),  # Hash the password
-            )
-            user.save()
-            return JsonResponse({"success": True, "message": "User registered successfully!"}, status=201)
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)}, status=400)
+        user = User.objects.create_user(
+            username=data["email"],
+            email=data["email"],
+            password=data["password"]
+        )
+        
+        login(request, user)  # Automatically log in after registration
+
+        return Response({"message": "User registered and logged in successfully!"}, status=status.HTTP_201_CREATED)
+# class LoginView(APIView):
+#     def post(self, request):
+#         print("Incoming Login Data:", request.data)  # ✅ Debugging
+
+#         email = request.data.get("email")
+#         password = request.data.get("password")
+
+#         if not email or not password:
+#             print("❌ Missing email or password")
+#             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         try:
+#             user = User.objects.get(email=email)
+#             print(f"✅ Found user: {user.email}")  # ✅ Debug user lookup
+#         except User.DoesNotExist:
+#             print("❌ User not found")
+#             return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         user = authenticate(request=request, username=email, password=password)
+
+#         if user is not None:
+#             print("✅ Authentication successful")
+#             return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
+
+#         print("❌ Invalid credentials")
+#         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
 class LoginView(APIView):
     def post(self, request):
-        print("Incoming Login Data:", request.data)  # ✅ Debugging
-
         email = request.data.get("email")
         password = request.data.get("password")
 
         if not email or not password:
-            print("❌ Missing email or password")
             return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            user = User.objects.get(email=email)
-            print(f"✅ Found user: {user.email}")  # ✅ Debug user lookup
-        except User.DoesNotExist:
-            print("❌ User not found")
-            return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
-
-        user = authenticate(request=request, username=email, password=password)
+        user = authenticate(request, username=email, password=password)
 
         if user is not None:
-            print("✅ Authentication successful")
+            login(request, user)  # Start session
             return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
 
-        print("❌ Invalid credentials")
         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+class LogoutView(APIView):
+    def post(self, request):
+        logout(request)  # End session
+        return Response({"message": "Logged out successfully!"}, status=status.HTTP_200_OK)
+
     
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -85,6 +109,17 @@ class UserDetailView(APIView):
         response = Response(serializer.data, status=status.HTTP_200_OK)
         response["Access-Control-Allow-Credentials"] = "true"
         return response
+class CheckAuthView(APIView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return Response({
+                "authenticated": True,
+                "user": {
+                    "id": request.user.id,
+                    "email": request.user.email
+                }
+            }, status=status.HTTP_200_OK)
+        return Response({"authenticated": False}, status=status.HTTP_200_OK)
 
 class ConsultationView(APIView):
     permission_classes = [IsAuthenticated]
@@ -107,13 +142,32 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
+from django.contrib.auth.decorators import login_required
 
-User = get_user_model()
+@login_required
+def get_user(request):
+    if request.user.is_authenticated:
+        return JsonResponse({"username": request.user.username})
+    return JsonResponse({"error": "User not authenticated"}, status=401)
 
-class CurrentUserView(APIView):
-    permission_classes = [IsAuthenticated]
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
-    def get(self, request):
-        user = request.user
-        serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+from django.http import JsonResponse
+
+def get_user_data(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "User not authenticated"}, status=401)
+    
+    user = request.user
+    return JsonResponse({
+        "username": user.username,
+        "email": user.email
+    })
+
+from django.contrib.auth import logout
+from django.http import JsonResponse
+
+def logout_view(request):
+    logout(request)
+    return JsonResponse({"message": "Logged out successfully"}, status=200)
