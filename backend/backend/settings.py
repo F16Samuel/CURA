@@ -174,19 +174,3 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
-
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",  # React frontend
-]
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # React frontend
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-]
-
-CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
-CORS_ALLOW_CREDENTIALS = True
