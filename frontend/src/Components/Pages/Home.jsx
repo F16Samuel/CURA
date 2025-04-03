@@ -1,11 +1,19 @@
-import Navbar from "../Navbar/Navbar"
+import React from "react";
+import { motion } from "framer-motion";
+import Navbar from "../Navbar/Navbar";
+import Hero from "../Home/Hero";
+import HowItWorks from "../Home/howitworks";
+import Features from "../Home/Features";
 
-function Home(){
-    return(
-        <>
-          <Navbar/>
-        </>
-    )
-}
+const Home = () => {
+  return (
+    <div>
+      <Navbar/>
+      <Hero/>
+      <HowItWorks/>
+      <Features/>
+    </div>
+  );
+};
 
-export default Home
+export default Home;
