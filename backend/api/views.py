@@ -162,9 +162,25 @@ class LoginView(APIView):
 from django.contrib.auth import logout
 from django.http import JsonResponse
 
+from django.http import JsonResponse
+from django.middleware.csrf import get_token
+from django.contrib.auth import logout
+from django.views.decorators.csrf import csrf_exempt
+
+def csrf_token_view(request):
+    token = get_token(request)
+    return JsonResponse({"csrfToken": token})  # ✅ Sends CSRF token to frontend
+
+@csrf_exempt  # 🚨 Debugging only, remove later
 def logout_view(request):
-    logout(request)
-    return JsonResponse({"message": "Logged out successfully"}, status=200)
+    if request.method == "POST":
+        logout(request)
+        response = JsonResponse({"message": "Logged out successfully"})
+        response.delete_cookie("sessionid")  # ✅ Ensure session is cleared
+        return response
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
 
     
 from django.http import JsonResponse
