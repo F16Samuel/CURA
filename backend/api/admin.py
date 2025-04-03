@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser
+from .models import CustomUser, Consultation
 
 class CustomUserAdmin(UserAdmin):
     list_display = ("id", "email", "role", "hospital", "is_staff", "is_active")
@@ -22,3 +22,8 @@ class CustomUserAdmin(UserAdmin):
     )
 
 admin.site.register(CustomUser, CustomUserAdmin)
+
+@admin.register(Consultation)
+class ConsultationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'age', 'gender', 'created_at', 'user')
+    search_fields = ('name', 'user__email', 'symptoms')
