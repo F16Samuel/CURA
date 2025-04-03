@@ -7,7 +7,7 @@ from .serializers import RegisterSerializer, UserSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationReportSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
@@ -269,14 +269,28 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import ConsultationReport
 
-@csrf_exempt
+import logging
+
+import json
+import logging
+from django.http import JsonResponse
+from .models import ConsultationReport
+from django.views.decorators.csrf import csrf_exempt
+
 def save_consultation(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            logging.info(f"Received data: {data}")  # Log received data for debugging
+
             user_id = data.get("user_id", None)
             responses = data.get("responses", {})
             ml_result = data.get("mlResult", "Not Available")
+
+            # Additional validation logs
+            logging.info(f"User ID: {user_id}")
+            logging.info(f"Responses: {responses}")
+            logging.info(f"ML Result: {ml_result}")
 
             # Save data in the database
             report = ConsultationReport.objects.create(
@@ -288,9 +302,9 @@ def save_consultation(request):
             return JsonResponse({"message": "Consultation saved successfully!", "report_id": report.id}, status=201)
 
         except Exception as e:
+            logging.error(f"Error saving consultation: {str(e)}")
             return JsonResponse({"error": str(e)}, status=400)
 
-    return JsonResponse({"error": "Invalid request"}, status=405)
 
 
 from django.http import HttpResponse
@@ -345,12 +359,11 @@ def generate_pdf(request, report_id):
         # **Basic Information (Fixing Bold Formatting)**
         user_info = [
             [Paragraph("<b>Report ID:</b>", styles["Normal"]), str(report.id)],
-            [Paragraph("<b>User ID:</b>", styles["Normal"]), str(report.user_id)],
             [Paragraph("<b>ML Diagnosis:</b>", styles["Normal"]), str(report.ml_result)],
         ]
 
         table = Table(user_info, colWidths=[150, 300])
-        table.setStyle(TableStyle([
+        table.setStyle(TableStyle([ 
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
@@ -395,4 +408,5 @@ def generate_pdf(request, report_id):
         return HttpResponse("Report not found", status=404)
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
+
 

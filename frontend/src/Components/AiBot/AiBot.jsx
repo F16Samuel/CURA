@@ -46,6 +46,7 @@ const AIChat = () => {
 
     let nextIndex = currentQuestionIndex + 1;
 
+    // Logic to add female-specific questions
     if (currentQuestionIndex === 2) {
       if (input.toLowerCase() === "female" && !questions.includes(femaleSpecificQuestions[0])) {
         setQuestions((prev) => [...prev, ...femaleSpecificQuestions]);
@@ -62,19 +63,32 @@ const AIChat = () => {
     }, 1000);
   };
 
+  const getCSRFToken = () => {
+    const csrfToken = document.cookie
+      .split(';')
+      .find(cookie => cookie.trim().startsWith('csrftoken='))
+      ?.split('=')[1];
+    return csrfToken;
+  };
+
   const handleSubmit = async () => {
     const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML model response
 
     const finalData = {
-      user_id: "12345", // Replace with actual user ID
+      // user_id: "12345", // Replace with actual user ID
       responses: userResponses,
       mlResult: responseFromML,
     };
 
+    const csrfToken = getCSRFToken();
+
     try {
       const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,  // Include CSRF token in request header
+        },
         body: JSON.stringify(finalData),
       });
 
@@ -114,7 +128,7 @@ const AIChat = () => {
       {currentQuestionIndex >= questions.length ? (
         <div className="submit-container">
           <button className="submit-button" onClick={handleSubmit}>
-            Submit
+            Submit to doc
           </button>
           {reportId && (
             <a
