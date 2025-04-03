@@ -46,7 +46,8 @@
   /* Navigation Links */
   .nav-links {
     display: flex;
-    gap: 1.5rem;
+    font-size: 1.1rem;
+    gap: 3rem;
   }
   
   .nav-item {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import "./Signup.css";
 
@@ -10,6 +11,8 @@ const Signup = () => {
     password: "",
     hospital: "", // Only for doctors
   });
+
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,8 +36,13 @@ const Signup = () => {
 
       const result = await response.json();
       alert(`Success: ${result.message}`);
+
+      // Reset form and role
       setFormData({ name: "", email: "", password: "", hospital: "" });
-      setRole(null); // Reset form
+      setRole(null);
+
+      // Redirect user to /home
+      navigate("/home");
     } catch (error) {
       alert("Error: " + error.message);
     }
