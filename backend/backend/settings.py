@@ -104,7 +104,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',  # ✅ Token-based auth
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.permissions.AllowAny',
+        
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

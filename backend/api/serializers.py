@@ -22,17 +22,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ["email", "password", "name", "username", "role", "hospital"]
+        fields = ["email", "password", "name", "role", "hospital"]  # No need to send 'username'
         extra_kwargs = {
             "password": {"write_only": True},
             "email": {"required": True},
-            "username": {"required": False},  # No need to send explicitly from frontend
-            "hospital": {"required": False, "allow_blank": True},  # Make hospital optional
+            "username": {"required": False},  # Will be assigned from 'name'
+            "hospital": {"required": False, "allow_blank": True},  # Optional
         }
 
     def create(self, validated_data):
-        validated_data["username"] = validated_data.pop("name")  # Rename name to username
-        user = CustomUser.objects.create_user(**validated_data)
+        validated_data["username"] = validated_data.pop("name")  # Rename 'name' to 'username'
+        user = CustomUser.objects.create_user(**validated_data)  # Create user
         return user
 
 # Login Serializer with JWT Token

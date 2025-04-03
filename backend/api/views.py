@@ -46,33 +46,47 @@ from django.contrib.auth.models import User
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth.models import User
+from rest_framework.permissions import AllowAny
+from django.contrib.auth.models import User  # Import User model
+from api.models import CustomUser  # Change to your custom user model if using one
+from django.contrib.auth.hashers import make_password
 
-@method_decorator(csrf_exempt, name='dispatch')
+from rest_framework.permissions import AllowAny
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+
 class RegisterView(APIView):
-    def post(self, request, *args, **kwargs):
-        try:
-            data = request.data  # Ensure JSON parsing
-            email = data.get("email")
-            password = data.get("password")
+    permission_classes = [AllowAny]
 
-            if not email or not password:
-                return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        print("Request Data:", request.data)  # Log the incoming data
 
-            if User.objects.filter(username=email).exists():
-                return Response({"error": "User already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        username = request.data.get("username")
+        email = request.data.get("email")
+        password = request.data.get("password")
+        user_type = request.data.get("user_type")
+        hospital = request.data.get("hospital")  # This is for doctors only
 
-            user = User.objects.create_user(username=email, email=email, password=password)
-            return Response({"message": "User registered successfully!"}, status=status.HTTP_201_CREATED)
+        if not username or not email or not password or not user_type:
+            return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if user_type == "doctor" and not hospital:
+            return Response({"error": "Hospital is required for doctors"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({"error": "Email already in use"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = CustomUser.objects.create(
+            username=username,
+            email=email,
+            password=make_password(password),
+            user_type=user_type,
+            hospital=hospital if user_type == "doctor" else None  # Set hospital only for doctors
+        )
+
+        return Response({"message": "Registration successful"}, status=status.HTTP_201_CREATED)
 
 
 class CSRFTokenView(APIView):

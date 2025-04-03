@@ -6,13 +6,15 @@ import "./Signup.css";
 const Signup = () => {
   const [role, setRole] = useState(null); // 'doctor' or 'patient'
   const [formData, setFormData] = useState({
-    name: "",
+    username: "", // 🔹 Changed 'name' to 'username' (matches backend)
     email: "",
     password: "",
     hospital: "", // Only for doctors
   });
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,9 +22,20 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     const endpoint = "http://127.0.0.1:8000/register/";
-    const data = { ...formData, role }; // Ensure role is included in the request body
+
+    // Only include hospital if the user is a doctor
+    const data = {
+      ...formData,
+      user_type: role,
+      hospital: role === "doctor" ? formData.hospital : null // Omit hospital for non-doctors
+    };
+
+    // Log the data to check what is being sent
+    console.log("Sending data:", data);
 
     try {
       const response = await fetch(endpoint, {
@@ -31,17 +44,20 @@ const Signup = () => {
         body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Registration failed");
+        throw new Error(result.error || "Registration failed");
       }
 
-      // Reset form and role after successful registration
-      setFormData({ name: "", email: "", password: "", hospital: "" });
+      // Reset form after success
+      setFormData({ username: "", email: "", password: "", hospital: "" });
       setRole(null);
-
       navigate("/"); // Redirect user to home page
     } catch (error) {
-      console.error("Error:", error.message); // Log the error instead of showing an alert
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,11 +89,14 @@ const Signup = () => {
           transition={{ duration: 0.3 }}
         >
           <h2>Register as {role === "doctor" ? "Doctor" : "Patient"}</h2>
+
+          {error && <p className="error-message">{error}</p>} {/* 🔹 Error display */}
+
           <input
             type="text"
-            name="name"
+            name="username" // 🔹 Changed from 'name' to 'username' (backend match)
             placeholder="Full Name"
-            value={formData.name}
+            value={formData.username}
             onChange={handleChange}
             required
           />
@@ -111,8 +130,9 @@ const Signup = () => {
             type="submit"
             className="btn-primary"
             whileHover={{ scale: 1.05 }}
+            disabled={loading} // 🔹 Disable button when loading
           >
-            Register
+            {loading ? "Registering..." : "Register"} {/* 🔹 Show loading state */}
           </motion.button>
           <motion.button
             className="btn-outline"
