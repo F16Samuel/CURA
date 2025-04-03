@@ -9,7 +9,13 @@ const initialQuestions = [
   "What is your marital status?",
   "What is your height (in meters)?",
   "What is your weight (in kg)?",
+  "Personal history: Are you a smoker or non-smoker?",
+  "Alcohol/tobacco use and duration?",
+  "Past medical history: Have you had a similar problem in the past or any surgery?",
+  "Family history: Do you have a history of cancer, kidney stones, or headaches?",
+  "Current complaints (C/C):"
 ];
+
 
 const femaleSpecificQuestions = ["Is your menstrual cycle regular or irregular?"];
 

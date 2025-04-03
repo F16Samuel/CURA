@@ -321,11 +321,12 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from .models import ConsultationReport
 
-from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import inch
+from django.http import HttpResponse
 from .models import ConsultationReport
 
 def generate_pdf(request, report_id):
@@ -337,70 +338,212 @@ def generate_pdf(request, report_id):
         response = HttpResponse(content_type="application/pdf")
         response["Content-Disposition"] = f'attachment; filename="consultation_report_{report_id}.pdf"'
 
-        # Create PDF document
-        doc = SimpleDocTemplate(response, pagesize=letter)
+        # Define modern color scheme
+        primary_color = colors.HexColor('#1E88E5')  # Modern blue
+        secondary_color = colors.HexColor('#43A047')  # Modern green
+        text_color = colors.HexColor('#212121')  # Near black
+        light_bg = colors.HexColor('#F5F5F5')  # Very light gray
+
+        # Create PDF document with margins
+        doc = SimpleDocTemplate(
+            response, 
+            pagesize=letter,
+            topMargin=0.5*inch,
+            bottomMargin=0.5*inch,
+            leftMargin=0.75*inch,
+            rightMargin=0.75*inch
+        )
+        
         elements = []
         styles = getSampleStyleSheet()
 
-        # **CURA Web App Header**
-        cura_header = Paragraph("<font size=16 color='blue'><b>CURA - Health Consultation Platform</b></font>", styles['Title'])
+        # Create custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontSize=24,
+            textColor=primary_color,
+            spaceAfter=16,
+            alignment=1  # Center alignment
+        )
+        
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=18,
+            textColor=secondary_color,
+            spaceAfter=12
+        )
+        
+        # Modified section_title style to ensure it's not italicized
+        section_title = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading3'],
+            fontSize=14,
+            textColor=text_color,
+            spaceBefore=12,
+            spaceAfter=6,
+            fontName='Helvetica-Bold',  # Using regular bold font instead of potentially italic
+            italic=0  # Explicitly setting italic to 0 (off)
+        )
+        
+        body_text = ParagraphStyle(
+            'BodyText',
+            parent=styles['Normal'],
+            fontSize=10,
+            textColor=text_color,
+            leading=14
+        )
+
+        # Header with modern styling
+        cura_header = Paragraph(
+            "<font color='#1E88E5'><b>CURA</b></font> <font color='#43A047'>Health Consultation</font>",
+            title_style
+        )
         elements.append(cura_header)
-        elements.append(Spacer(1, 12))
+        
+        # Report subtitle
+        report_title = Paragraph(
+            f"Consultation Report #{report.id}",
+            subtitle_style
+        )
+        elements.append(report_title)
+        
+        # Date & time info
+        if hasattr(report, 'created_at'):
+            date_info = Paragraph(
+                f"Generated on: {report.created_at.strftime('%B %d, %Y at %H:%M')}",
+                body_text
+            )
+            elements.append(date_info)
+        
+        elements.append(Spacer(1, 20))
+        
+        # Horizontal separator
+        separator_style = TableStyle([
+            ('LINEBELOW', (0, 0), (-1, 0), 1, primary_color),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 0),
+        ])
+        separator = Table([['']],  colWidths=[7*inch])
+        separator.setStyle(separator_style)
+        elements.append(separator)
+        elements.append(Spacer(1, 20))
 
-        # **Report Title**
-        title = Paragraph("<font size=14><b>Consultation Report</b></font>", styles['Title'])
-        elements.append(title)
+        # Basic Information Section with modern table - non-italicized section title
+        elements.append(Paragraph("Report Summary", section_title))
         elements.append(Spacer(1, 6))
-
-        # **Horizontal Line Separator**
-        elements.append(Paragraph("<hr/>", styles["Normal"]))
-        elements.append(Spacer(1, 12))
-
-        # **Basic Information (Fixing Bold Formatting)**
+        
         user_info = [
-            [Paragraph("<b>Report ID:</b>", styles["Normal"]), str(report.id)],
-            [Paragraph("<b>ML Diagnosis:</b>", styles["Normal"]), str(report.ml_result)],
+            [Paragraph("<b>Report ID:</b>", body_text), Paragraph(str(report.id), body_text)],
+            [Paragraph("<b>ML Diagnosis:</b>", body_text), Paragraph(str(report.ml_result), body_text)],
         ]
 
-        table = Table(user_info, colWidths=[150, 300])
+        # Modern table with clean styling
+        table = Table(user_info, colWidths=[2*inch, 4.5*inch])
         table.setStyle(TableStyle([ 
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            # Headers
+            ('BACKGROUND', (0, 0), (0, -1), light_bg),
+            ('TEXTCOLOR', (0, 0), (0, -1), text_color),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            # Content
+            ('BACKGROUND', (1, 0), (1, -1), colors.white),
+            # Border styling
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            # Padding
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
         ]))
         elements.append(table)
-        elements.append(Spacer(1, 12))
+        elements.append(Spacer(1, 30))
 
-        # **User Responses Table**
+        # User Responses Section with modern styling - non-italicized section title
         if report.responses:
-            response_data = [
-                [Paragraph("<b>Question</b>", styles["Normal"]), Paragraph("<b>Answer</b>", styles["Normal"])]
-            ] + [[Paragraph(q, styles["Normal"]), Paragraph(a, styles["Normal"])] for q, a in report.responses.items()]
-
-            response_table = Table(response_data, colWidths=[250, 250])
-            response_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ]))
-            elements.append(Paragraph("<b>User Responses:</b>", styles["Heading2"]))
+            elements.append(Paragraph("Consultation Responses", section_title))
             elements.append(Spacer(1, 6))
-            elements.append(response_table)
+            
+            # Create enhanced header row
+            response_data = [
+                [Paragraph("<b>Question</b>", body_text), 
+                 Paragraph("<b>Response</b>", body_text)]
+            ]
+            
+            # Add each Q&A row with enhanced styling
+            for q, a in report.responses.items():
+                question_text = Paragraph(q, body_text)
+                answer_text = Paragraph(a, body_text)
+                response_data.append([question_text, answer_text])
 
-        # **Footer**
-        elements.append(Spacer(1, 20))
-        footer = Paragraph("<font size=10 color='black'><b>Thanks for using CURA! Stay healthy.</b></font>", styles["Normal"])
+            response_table = Table(response_data, colWidths=[3.25*inch, 3.25*inch])
+            
+            # Create dynamic alternating row styles
+            table_style = [
+                # Header styling
+                ('BACKGROUND', (0, 0), (-1, 0), primary_color),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                # Grid styling
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                # Padding
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+                ('LEFTPADDING', (0, 0), (-1, -1), 12),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ]
+            
+            # Add alternating row colors dynamically based on available rows
+            for i in range(1, len(response_data)):
+                if i % 2 == 0:  # Even rows (starting from 1-based index)
+                    table_style.append(('BACKGROUND', (0, i), (-1, i), light_bg))
+                else:  # Odd rows
+                    table_style.append(('BACKGROUND', (0, i), (-1, i), colors.white))
+            
+            response_table.setStyle(TableStyle(table_style))
+            elements.append(response_table)
+            elements.append(Spacer(1, 30))
+
+        # Add disclaimer
+        disclaimer_style = ParagraphStyle(
+            'Disclaimer',
+            parent=styles['Italic'],
+            fontSize=8,
+            textColor=colors.grey,
+            alignment=1  # Center alignment
+        )
+        disclaimer = Paragraph(
+            "This report is computer-generated and may require review by a healthcare professional. "
+            "CURA's ML diagnosis is not a substitute for professional medical advice.",
+            disclaimer_style
+        )
+        elements.append(disclaimer)
+        elements.append(Spacer(1, 12))
+        
+        # Modern footer with separator
+        footer_separator = Table([['']],  colWidths=[7*inch])
+        footer_separator.setStyle(TableStyle([
+            ('LINEABOVE', (0, 0), (-1, 0), 0.5, colors.lightgrey),
+            ('TOPPADDING', (0, 0), (-1, 0), 0),
+        ]))
+        elements.append(footer_separator)
+        
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=9,
+            textColor=secondary_color,
+            alignment=1  # Center alignment
+        )
+        footer = Paragraph(
+            "Thank you for using <b>CURA</b> Health Consultation Platform | Stay Healthy",
+            footer_style
+        )
+        elements.append(Spacer(1, 8))
         elements.append(footer)
 
-        # Build PDF
+        # Build the PDF
         doc.build(elements)
         return response
 
@@ -408,5 +551,7 @@ def generate_pdf(request, report_id):
         return HttpResponse("Report not found", status=404)
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
+
+
 
 
