@@ -11,18 +11,27 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'role']
 
 # Register Serializer
+from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from .models import CustomUser
+User = get_user_model()
+
 class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6)
+    name = serializers.CharField(write_only=True, required=True)  # Accept `name` field from frontend
 
     class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'password', 'role']
+        model = CustomUser
+        fields = ["email", "password", "name", "username", "role", "hospital"]
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "email": {"required": True},
+            "username": {"required": False},  # No need to send explicitly from frontend
+            "hospital": {"required": False, "allow_blank": True},  # Make hospital optional
+        }
 
     def create(self, validated_data):
-        role = validated_data.pop('role', 'patient')  # Default role if not provided
-        user = User.objects.create_user(**validated_data)
-        user.role = role
-        user.save()
+        validated_data["username"] = validated_data.pop("name")  # Rename `name` to `username`
+        user = CustomUser.objects.create_user(**validated_data)
         return user
 
 # Login Serializer with JWT Token

@@ -2,34 +2,66 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import authenticate, get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# Register API View
+
+from django.http import JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from .models import CustomUser
+from django.contrib.auth.hashers import make_password
+from .serializers import UserSerializer
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User registered successfully"}, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
 
-# Login API View
+        # Validate required fields
+        if "email" not in data or "password" not in data:
+            return Response({"error": "Email and Password are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if email already exists
+        if CustomUser.objects.filter(email=data["email"]).exists():
+            return Response({"error": "Email already in use!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.create(
+                username=data["email"],  # Use email as username
+                email=data["email"],
+                role=data.get("role", "patient"),
+                hospital=data.get("hospital", ""),
+                password=make_password(data["password"]),  # Hash the password
+            )
+            user.save()
+            return JsonResponse({"success": True, "message": "User registered successfully!"}, status=201)
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
-            return Response(serializer.validated_data, status=status.HTTP_200_OK)
+            user = serializer.validated_data["user"]
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "email": user.email,
+                    "username": user.username,
+                    "role": user.role
+                }
+            }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# Get User Details API View (Protected)
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
