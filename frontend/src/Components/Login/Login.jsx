@@ -13,9 +13,18 @@ const getCookie = (name) => {
 };
 
 const Login = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +40,7 @@ const Login = () => {
     try {
       const csrfToken = getCookie("csrftoken"); // Get CSRF token from cookies
 
-      const response = await fetch("http://127.0.0.1:8000/login/", {
+      const response = await fetch("http://localhost:8000/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,26 +65,55 @@ const Login = () => {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
+    <motion.div
+      className="login-container"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.form
+        onSubmit={handleSubmit}
+        className="login-form"
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+      >
+        <h2>Login</h2>
+
+        {error && <p className="login-error">{error}</p>}
+
+        <motion.input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
           required
+          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
         />
-        <input
+
+        <motion.input
           type="password"
+          name="password"
           placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleChange}
           required
+          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
         />
-        <button type="submit">Login</button>
-      </form>
-    </div>
+
+        <motion.button
+          type="submit"
+          className="login-btn-primary"
+          disabled={loading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </motion.button>
+      </motion.form>
+    </motion.div>
   );
 };
 

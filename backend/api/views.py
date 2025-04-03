@@ -8,6 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationSerializer
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
