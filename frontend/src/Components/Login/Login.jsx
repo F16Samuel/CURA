@@ -13,18 +13,9 @@ const getCookie = (name) => {
 };
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,55 +56,26 @@ const Login = () => {
   };
 
   return (
-    <motion.div
-      className="login-container"
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-    >
-      <motion.form
-        onSubmit={handleSubmit}
-        className="login-form"
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-      >
-        <h2>Login</h2>
-
-        {error && <p className="login-error">{error}</p>}
-
-        <motion.input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
-          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
         />
-
-        <motion.input
+        <input
           type="password"
-          name="password"
           placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
-          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
         />
-
-        <motion.button
-          type="submit"
-          className="login-btn-primary"
-          disabled={loading}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </motion.button>
-      </motion.form>
-    </motion.div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
   );
 };
 

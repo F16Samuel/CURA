@@ -1,7 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.models import User
+from .serializers import RegisterSerializer, UserSerializer
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationSerializer
@@ -74,6 +77,8 @@ class RegisterView(APIView):
 #         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
@@ -121,9 +126,7 @@ class CheckAuthView(APIView):
             }, status=status.HTTP_200_OK)
         return Response({"authenticated": False}, status=status.HTTP_200_OK)
 
-class ConsultationView(APIView):
-    permission_classes = [IsAuthenticated]
-
+class LogoutView(APIView):
     def post(self, request):
         data = request.data.copy()
         data['user'] = request.user.id  # Assign logged-in user
