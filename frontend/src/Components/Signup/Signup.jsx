@@ -21,7 +21,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const endpoint = "http://127.0.0.1:8000/register/"; // Corrected API endpoint (No '/api/register/doctor' or '/api/register/patient')
+    const endpoint = "http://127.0.0.1:8000/register/";
     const data = { ...formData, role }; // Ensure role is included in the request body
 
     try {
@@ -35,16 +35,13 @@ const Signup = () => {
         throw new Error("Registration failed");
       }
 
-      const result = await response.json();
-      alert(`Success: ${result.message}`);
-
-      // Reset form and role
+      // Reset form and role after successful registration
       setFormData({ name: "", email: "", password: "", hospital: "" });
-      setRole(null); // Reset form after success
-      // Redirect user to /home
-      navigate("/");
+      setRole(null);
+      
+      navigate("/"); // Redirect user to home page
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Error:", error.message); // Log the error instead of showing an alert
     }
   };
 

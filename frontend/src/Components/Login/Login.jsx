@@ -40,9 +40,8 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Login successful!");
         localStorage.setItem("token", data.token);
-        navigate("/");
+        navigate("/"); // Redirect to home without alert
       } else {
         setError(data.message || "Invalid credentials");
       }
