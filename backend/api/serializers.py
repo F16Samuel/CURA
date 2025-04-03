@@ -52,10 +52,10 @@ class LoginSerializer(serializers.Serializer):
 
 
 from rest_framework import serializers
-from .models import Consultation
+from .models import ConsultationReport
 
-class ConsultationSerializer(serializers.ModelSerializer):
+class ConsultationReportSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Consultation
-        fields = ['id', 'user', 'name', 'age', 'gender', 'previous_history', 'symptoms', 'created_at']
+        model = ConsultationReport
+        fields = ['id', 'user', 'responses', 'ml_result', 'created_at']
         read_only_fields = ['user', 'created_at']

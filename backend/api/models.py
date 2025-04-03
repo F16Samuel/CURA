@@ -19,28 +19,28 @@ class CustomUser(AbstractUser):
         return f"{self.email} - {self.role}"
 
 
-class Consultation(models.Model):
-    GENDER_CHOICES = [
-        ('male', 'Male'),
-        ('female', 'Female'),
-        ('other', 'Other'),
-    ]
+# class Consultation(models.Model):
+#     GENDER_CHOICES = [
+#         ('male', 'Male'),
+#         ('female', 'Female'),
+#         ('other', 'Other'),
+#     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
-    age = models.PositiveIntegerField()
-    gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
-    previous_history = models.TextField(blank=True, null=True)
-    symptoms = models.TextField()
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+#     name = models.CharField(max_length=255)
+#     age = models.PositiveIntegerField()
+#     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
+#     previous_history = models.TextField(blank=True, null=True)
+#     symptoms = models.TextField()
 
-    created_at = models.DateTimeField(auto_now_add=True)
+#     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Consultation for {self.name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+#     def __str__(self):
+#         return f"Consultation for {self.name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
 
 class ConsultationReport(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Use ForeignKey
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=  True, blank=  True)  # Use ForeignKey
     responses = models.JSONField()
     ml_result = models.TextField(default="Not Available")
     created_at = models.DateTimeField(auto_now_add=True)
