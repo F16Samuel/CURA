@@ -18,13 +18,14 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const endpoint = role === "doctor" ? "/api/register/doctor" : "/api/register/patient";
+    const endpoint = "http://127.0.0.1:8000/register/"; // Corrected API endpoint (No '/api/register/doctor' or '/api/register/patient')
+    const data = { ...formData, role }; // Ensure role is included in the request body
 
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -34,7 +35,7 @@ const Signup = () => {
       const result = await response.json();
       alert(`Success: ${result.message}`);
       setFormData({ name: "", email: "", password: "", hospital: "" });
-      setRole(null); // Reset form
+      setRole(null); // Reset form after success
     } catch (error) {
       alert("Error: " + error.message);
     }
