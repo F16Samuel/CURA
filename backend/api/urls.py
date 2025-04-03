@@ -6,5 +6,8 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='api-login'),
     path('user/', UserDetailView.as_view(), name='api-user'),
     path('consultation/', ConsultationView.as_view(), name='ai-consultation'),
-    path('current-user/', CurrentUserView.as_view(), name='current-user'),
+    # path('current-user/', get_user_data, name='current-user'),
+    path("get_user/", get_user_data, name="get_user_data"),
+    path("logout/", logout_view, name="logout"),
+
 ]
