@@ -1,5 +1,7 @@
 import { useState } from "react";
-import "./login.css"; // Importing the CSS file
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import "./login.css"; // Import updated CSS
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -9,6 +11,7 @@ const Login = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,8 +41,8 @@ const Login = () => {
 
       if (response.ok) {
         alert("Login successful!");
-        // Store token in localStorage or state if needed
-        // localStorage.setItem("token", data.token);
+        localStorage.setItem("token", data.token);
+        navigate("/");
       } else {
         setError(data.message || "Invalid credentials");
       }
@@ -51,40 +54,55 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
-      <div className="login-box">
-        <h2 className="login-title">Login</h2>
+    <motion.div
+      className="login-container"
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+    >
+      <motion.form
+        onSubmit={handleSubmit}
+        className="login-form"
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+      >
+        <h2>Login</h2>
+
         {error && <p className="login-error">{error}</p>}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="login-input-group">
-            <label>Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        <motion.input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
+        />
 
-          <div className="login-input-group">
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
+        <motion.input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          whileFocus={{ scale: 1.05, borderColor: "#50BFA5" }}
+        />
 
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-      </div>
-    </div>
+        <motion.button
+          type="submit"
+          className="login-btn-primary"
+          disabled={loading}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {loading ? "Logging in..." : "Login"}
+        </motion.button>
+      </motion.form>
+    </motion.div>
   );
 };
 

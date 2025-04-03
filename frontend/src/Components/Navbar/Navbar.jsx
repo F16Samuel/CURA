@@ -52,7 +52,7 @@ const Navbar = () => {
         {/* Authentication Buttons */}
         <div className="auth-buttons">
           <motion.div whileHover={{ scale: 1.05 }}>
-            <Link to="/signin" className="btn-outline">Sign in</Link>
+            <Link to="/Login" className="btn-outline">Log in</Link>
           </motion.div>
           <motion.div whileHover={{ scale: 1.05 }}>
             <Link to="/signup" className="btn-primary">Sign up</Link>
