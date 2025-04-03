@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import "./Navbar.css";
 
 const Navbar = () => {
@@ -8,6 +8,7 @@ const Navbar = () => {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
+  // Function to get CSRF token from cookies
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
@@ -24,64 +25,38 @@ const Navbar = () => {
   }
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/get_user/", {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken"),
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        if (response.status === 401) {
-          setUser(null);
-          localStorage.removeItem("user");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-
-        const userData = await response.json();
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
-
-    fetchUser();
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
+  // Function to handle logout
   const handleLogout = async () => {
     try {
+      const csrfToken = getCookie("csrftoken");
+
       const response = await fetch("http://localhost:8000/logout/", {
         method: "POST",
         credentials: "include",
         headers: {
-          "X-CSRFToken": getCookie("csrftoken"),
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
         },
       });
 
       if (response.ok) {
-        setUser(null);
         localStorage.removeItem("user");
         localStorage.removeItem("token");
-        navigate("/");
+        setUser(null);
+        navigate("/login");
+        window.location.reload(); // ✅ Ensure navbar updates immediately
       } else {
-        console.error("Logout failed");
+        console.error("Logout failed:", await response.text());
       }
     } catch (error) {
       console.error("Error:", error);
     }
-  };
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
   };
 
   return (
@@ -111,7 +86,6 @@ const Navbar = () => {
           </motion.span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="nav-links">
           {["Home", "Providers", "AI Consultation", "Appointments"].map(
             (item, index) => (
@@ -131,11 +105,12 @@ const Navbar = () => {
           )}
         </nav>
 
-        {/* Authentication Buttons */}
         <div className="auth-buttons">
           {user ? (
             <>
-              <motion.div className="welcome-msg">Welcome, {user.username}</motion.div>
+              <motion.div className="welcome-msg">
+                Welcome, {user.name} {/* ✅ Fix username display */}
+              </motion.div>
               <motion.button
                 onClick={handleLogout}
                 className="btn-logout"
@@ -160,51 +135,14 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Menu Toggle Button */}
-        <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle menu">
+        <button
+          className="menu-toggle"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
           {isMenuOpen ? "✖" : "☰"}
         </button>
       </div>
-
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            className="mobile-menu"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="mobile-nav">
-              {["Home", "Providers", "AI Consultation", "Appointments"].map((item, index) => (
-                <Link
-                  key={index}
-                  to={`/${item.toLowerCase().replace(/\s+/g, "-")}`}
-                  className="mobile-nav-item"
-                  onClick={toggleMenu}
-                >
-                  {item}
-                </Link>
-              ))}
-              {user ? (
-                <button onClick={handleLogout} className="btn-primary mobile-btn">
-                  Logout
-                </button>
-              ) : (
-                <>
-                  <Link to="/login" className="btn-outline mobile-btn" onClick={toggleMenu}>
-                    Log in
-                  </Link>
-                  <Link to="/signup" className="btn-primary mobile-btn" onClick={toggleMenu}>
-                    Sign up
-                  </Link>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.header>
   );
 };

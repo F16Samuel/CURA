@@ -8,7 +8,17 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationSerializer
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+import json
+from .models import ConsultationReport
 
 User = get_user_model()
 
@@ -29,26 +39,45 @@ from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
 
 User = get_user_model()
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+from django.middleware.csrf import get_token
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.models import User
+
+@method_decorator(csrf_exempt, name='dispatch')
 class RegisterView(APIView):
-    def post(self, request):
-        data = request.data
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data  # Ensure JSON parsing
+            email = data.get("email")
+            password = data.get("password")
 
-        if "email" not in data or "password" not in data:
-            return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+            if not email or not password:
+                return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(email=data["email"]).exists():
-            return Response({"error": "Email already in use!"}, status=status.HTTP_400_BAD_REQUEST)
+            if User.objects.filter(username=email).exists():
+                return Response({"error": "User already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = User.objects.create_user(
-            username=data["email"],
-            email=data["email"],
-            password=data["password"]
-        )
-        
-        login(request, user)  # Automatically log in after registration
+            user = User.objects.create_user(username=email, email=email, password=password)
+            return Response({"message": "User registered successfully!"}, status=status.HTTP_201_CREATED)
 
-        return Response({"message": "User registered and logged in successfully!"}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CSRFTokenView(APIView):
+    def get(self, request):
+        return Response({"csrftoken": get_token(request)})
 # class LoginView(APIView):
 #     def post(self, request):
 #         print("Incoming Login Data:", request.data)  # ✅ Debugging
@@ -76,23 +105,45 @@ class RegisterView(APIView):
 #         print("❌ Invalid credentials")
 #         return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import AllowAny
+from django.contrib.auth import get_user_model
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from django.contrib.auth.hashers import check_password
+
+User = get_user_model()  # ✅ Get custom user model
+
 class LoginView(APIView):
-    permission_classes = [AllowAny]
+    authentication_classes = []  # ✅ No authentication required for login
+    permission_classes = [AllowAny]  # ✅ Allow all users to access
 
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
 
-        if not email or not password:
-            return Response({"error": "Email and password are required."}, status=status.HTTP_400_BAD_REQUEST)
+        # ✅ Get user by email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"error": "Invalid email or password"}, status=400)
 
-        user = authenticate(request, username=email, password=password)
+        # ✅ Check password manually
+        if not check_password(password, user.password):
+            return Response({"error": "Invalid email or password"}, status=400)
 
-        if user is not None:
-            login(request, user)  # Start session
-            return Response({"message": "Login successful!"}, status=status.HTTP_200_OK)
+        # ✅ Generate or retrieve the token
+        token, _ = Token.objects.get_or_create(user=user)
 
-        return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            "token": token.key,
+            "user": {
+                "id": user.id,
+                "name": user.username,  # Use `.first_name` if needed
+                "email": user.email
+            }
+        })
 
 class LogoutView(APIView):
     def post(self, request):
@@ -126,17 +177,21 @@ class CheckAuthView(APIView):
             }, status=status.HTTP_200_OK)
         return Response({"authenticated": False}, status=status.HTTP_200_OK)
 
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth import logout
+
 class LogoutView(APIView):
     def post(self, request):
-        data = request.data.copy()
-        data['user'] = request.user.id  # Assign logged-in user
-
-        serializer = ConsultationSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"success": True, "message": "Consultation submitted successfully!"}, status=status.HTTP_201_CREATED)
+        # Perform logout
+        logout(request)
         
-        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        # Clear session data
+        request.session.flush()
+        
+        return Response({"success": True, "message": "Logout successful"}, status=status.HTTP_200_OK)
+
     
 
 from rest_framework.views import APIView
@@ -174,3 +229,138 @@ from django.http import JsonResponse
 def logout_view(request):
     logout(request)
     return JsonResponse({"message": "Logged out successfully"}, status=200)
+
+from .models import ConsultationReport
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import ConsultationReport
+
+@csrf_exempt
+def save_consultation(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get("user_id", None)
+            responses = data.get("responses", {})
+            ml_result = data.get("mlResult", "Not Available")
+
+            # Save data in the database
+            report = ConsultationReport.objects.create(
+                user_id=user_id,
+                responses=responses,
+                ml_result=ml_result
+            )
+
+            return JsonResponse({"message": "Consultation saved successfully!", "report_id": report.id}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request"}, status=405)
+
+
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import json
+from .models import ConsultationReport
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from .models import ConsultationReport
+
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from .models import ConsultationReport
+
+def generate_pdf(request, report_id):
+    try:
+        # Fetch the report data from the database
+        report = ConsultationReport.objects.get(id=report_id)
+
+        # Create an HTTP response with a PDF file
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="consultation_report_{report_id}.pdf"'
+
+        # Create PDF document
+        doc = SimpleDocTemplate(response, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # **CURA Web App Header**
+        cura_header = Paragraph("<font size=16 color='blue'><b>CURA - Health Consultation Platform</b></font>", styles['Title'])
+        elements.append(cura_header)
+        elements.append(Spacer(1, 12))
+
+        # **Report Title**
+        title = Paragraph("<font size=14><b>Consultation Report</b></font>", styles['Title'])
+        elements.append(title)
+        elements.append(Spacer(1, 6))
+
+        # **Horizontal Line Separator**
+        elements.append(Paragraph("<hr/>", styles["Normal"]))
+        elements.append(Spacer(1, 12))
+
+        # **Basic Information (Fixing Bold Formatting)**
+        user_info = [
+            [Paragraph("<b>Report ID:</b>", styles["Normal"]), str(report.id)],
+            [Paragraph("<b>User ID:</b>", styles["Normal"]), str(report.user_id)],
+            [Paragraph("<b>ML Diagnosis:</b>", styles["Normal"]), str(report.ml_result)],
+        ]
+
+        table = Table(user_info, colWidths=[150, 300])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 12))
+
+        # **User Responses Table**
+        if report.responses:
+            response_data = [
+                [Paragraph("<b>Question</b>", styles["Normal"]), Paragraph("<b>Answer</b>", styles["Normal"])]
+            ] + [[Paragraph(q, styles["Normal"]), Paragraph(a, styles["Normal"])] for q, a in report.responses.items()]
+
+            response_table = Table(response_data, colWidths=[250, 250])
+            response_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.darkblue),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ]))
+            elements.append(Paragraph("<b>User Responses:</b>", styles["Heading2"]))
+            elements.append(Spacer(1, 6))
+            elements.append(response_table)
+
+        # **Footer**
+        elements.append(Spacer(1, 20))
+        footer = Paragraph("<font size=10 color='black'><b>Thanks for using CURA! Stay healthy.</b></font>", styles["Normal"])
+        elements.append(footer)
+
+        # Build PDF
+        doc.build(elements)
+        return response
+
+    except ConsultationReport.DoesNotExist:
+        return HttpResponse("Report not found", status=404)
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", status=500)
+
