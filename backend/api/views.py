@@ -159,10 +159,12 @@ class LoginView(APIView):
             }
         })
 
-class LogoutView(APIView):
-    def post(self, request):
-        logout(request)  # End session
-        return Response({"message": "Logged out successfully!"}, status=status.HTTP_200_OK)
+from django.contrib.auth import logout
+from django.http import JsonResponse
+
+def logout_view(request):
+    logout(request)
+    return JsonResponse({"message": "Logged out successfully"}, status=200)
 
     
 from django.http import JsonResponse

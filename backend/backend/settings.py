@@ -83,12 +83,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # 🔹 CORS & CSRF Configuration (Frontend: React on Vite)
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # ✅ Your React frontend
+    "http://localhost:5173",  # ✅ Allow React frontend on 5173
+    "http://localhost:5174",  # ✅ Allow React frontend on 5174
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",  # ✅ Trust frontend for CSRF
+    "http://localhost:5173",  # ✅ Trust frontend on 5173
+    "http://localhost:5174",  # ✅ Trust frontend on 5174
 ]
+
 
 CORS_ALLOW_CREDENTIALS = True  # ✅ Allow cookies for authentication
 
