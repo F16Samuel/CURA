@@ -7,6 +7,7 @@ function SignupPage(){
         <div>
             <Navbar/>
             <Signup/>
+            <Footer/>
         </div>
     )
 }
