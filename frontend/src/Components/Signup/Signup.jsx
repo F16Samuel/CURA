@@ -41,6 +41,8 @@ const Signup = () => {
       // Reset form and role
       setFormData({ name: "", email: "", password: "", hospital: "" });
       setRole(null); // Reset form after success
+      // Redirect user to /home
+      navigate("/home");
     } catch (error) {
       alert("Error: " + error.message);
     }
