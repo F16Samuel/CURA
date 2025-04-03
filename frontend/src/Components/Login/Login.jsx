@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import "./login.css"; // Import updated CSS
+import "./login.css";
 
 // Function to get CSRF token from cookies
 const getCookie = (name) => {
@@ -22,17 +22,19 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     if (!formData.email || !formData.password) {
-      setError("All fields are required!");
+      setError("⚠️ All fields are required!");
       setLoading(false);
       return;
     }
@@ -53,12 +55,17 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // ✅ Store session details properly
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
         navigate("/"); // ✅ Redirect to home on successful login
+        window.location.reload(); // ✅ Refresh to update navbar
       } else {
-        setError(data.message || "Invalid credentials");
+        setError(data.error || "❌ Invalid credentials");
       }
     } catch (err) {
-      setError("Something went wrong. Try again!");
+      setError("❌ Something went wrong. Try again!");
     } finally {
       setLoading(false);
     }

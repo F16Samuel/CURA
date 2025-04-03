@@ -9,20 +9,9 @@ const initialQuestions = [
   "What is your marital status?",
   "What is your height (in meters)?",
   "What is your weight (in kg)?",
-  "Do you smoke? (Yes/No)",
-  "Do you consume alcohol or tobacco? If yes, mention duration.",
-  "Have you had similar problems in the past?",
-  "Have you undergone any surgery?",
-  "Does your family have a history of cancer, kidney stones, or headaches?",
-  "What are your current symptoms?",
-  "How long have you been experiencing these symptoms?",
-  "Do you have any allergies?",
-  "Are you currently on any medication?",
 ];
 
-const femaleSpecificQuestions = [
-  "Is your menstrual cycle regular or irregular?",
-];
+const femaleSpecificQuestions = ["Is your menstrual cycle regular or irregular?"];
 
 const AIChat = () => {
   const [messages, setMessages] = useState([]);
@@ -30,6 +19,7 @@ const AIChat = () => {
   const [userResponses, setUserResponses] = useState({});
   const [questions, setQuestions] = useState(initialQuestions);
   const [input, setInput] = useState("");
+  const [reportId, setReportId] = useState(null);
   const chatEndRef = useRef(null);
 
   useEffect(() => {
@@ -50,44 +40,52 @@ const AIChat = () => {
     const userMessage = { sender: "User", text: input };
     const updatedResponses = { ...userResponses, [questions[currentQuestionIndex]]: input };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setUserResponses(updatedResponses);
     setInput("");
 
     let nextIndex = currentQuestionIndex + 1;
 
     if (currentQuestionIndex === 2) {
-      // Check gender response and add female-specific questions
-      if (input.toLowerCase() === "female") {
+      if (input.toLowerCase() === "female" && !questions.includes(femaleSpecificQuestions[0])) {
         setQuestions((prev) => [...prev, ...femaleSpecificQuestions]);
       }
     }
 
-    if (nextIndex < questions.length) {
-      setTimeout(() => {
+    setTimeout(() => {
+      if (nextIndex < questions.length) {
         setMessages((prev) => [...prev, { sender: "AI", text: questions[nextIndex] }]);
         setCurrentQuestionIndex(nextIndex);
-      }, 1000);
-    }
+      } else {
+        setCurrentQuestionIndex(questions.length);
+      }
+    }, 1000);
   };
 
   const handleSubmit = async () => {
     const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML model response
 
     const finalData = {
+      user_id: "12345", // Replace with actual user ID
       responses: userResponses,
       mlResult: responseFromML,
     };
 
     try {
-      const res = await fetch("http://your-backend-url.com/api/submit-consultation", {
+      const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(finalData),
       });
 
       if (res.ok) {
-        alert("Form submitted successfully to the doctor!");
+        const data = await res.json();
+        console.log("API Response:", data);
+        if (data.report_id) {
+          setReportId(data.report_id);
+        } else {
+          alert("Error: No report_id received.");
+        }
       } else {
         alert("Error submitting the form.");
       }
@@ -113,7 +111,22 @@ const AIChat = () => {
         <div ref={chatEndRef}></div>
       </div>
 
-      {currentQuestionIndex < questions.length ? (
+      {currentQuestionIndex >= questions.length ? (
+        <div className="submit-container">
+          <button className="submit-button" onClick={handleSubmit}>
+            Submit
+          </button>
+          {reportId && (
+            <a
+              href={`http://127.0.0.1:8000/api/generate-report/${reportId}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="download-button">Download PDF Report</button>
+            </a>
+          )}
+        </div>
+      ) : (
         <div className="input-area">
           <input
             type="text"
@@ -122,12 +135,6 @@ const AIChat = () => {
             placeholder="Type your response..."
           />
           <button onClick={handleSendMessage}>Send</button>
-        </div>
-      ) : (
-        <div className="submit-container">
-          <button className="submit-button" onClick={handleSubmit}>
-            Submit to Doctor
-          </button>
         </div>
       )}
     </div>
