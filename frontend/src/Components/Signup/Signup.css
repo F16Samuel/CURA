@@ -1,0 +1,52 @@
+.register-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  .register-options {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+  }
+  
+  .register-form h2 {
+    text-align: center;
+  }
+  
+  .register-form input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .btn-primary {
+    background: #50BFA5;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .btn-outline {
+    background: transparent;
+    border: 1px solid #50BFA5;
+    color: #50BFA5;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  

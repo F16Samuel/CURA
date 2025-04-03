@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import "./Navbar.css";
 
@@ -18,7 +19,7 @@ const Navbar = () => {
     >
       <div className="container">
         {/* Logo */}
-        <a href="#" className="logo">
+        <Link to="/" className="logo">
           <motion.span 
             className="logo-icon"
             initial={{ opacity: 0, scale: 0.5 }}
@@ -35,27 +36,27 @@ const Navbar = () => {
           >
             CURA
           </motion.span>
-        </a>
+        </Link>
 
         {/* Navigation Links (Desktop) */}
         <nav className="nav-links">
           {["Home", "Providers", "AI Consultation", "Appointments"].map((item, index) => (
-            <motion.a
-              key={index}
-              href="#"
-              className="nav-item"
-              whileHover={{ scale: 1.1, color: "#50BFA5" }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              {item}
-            </motion.a>
+            <motion.div key={index} whileHover={{ scale: 1.1, color: "#50BFA5" }} transition={{ type: "spring", stiffness: 300 }}>
+              <Link to={`/${item.toLowerCase().replace(/\s+/g, "-")}`} className="nav-item">
+                {item}
+              </Link>
+            </motion.div>
           ))}
         </nav>
 
         {/* Authentication Buttons */}
         <div className="auth-buttons">
-          <motion.a href="#" className="btn-outline" whileHover={{ scale: 1.05 }}>Sign in</motion.a>
-          <motion.a href="#" className="btn-primary" whileHover={{ scale: 1.05 }}>Sign up</motion.a>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Link to="/signin" className="btn-outline">Sign in</Link>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Link to="/signup" className="btn-primary">Sign up</Link>
+          </motion.div>
         </div>
 
         {/* Mobile Menu Button */}
@@ -76,19 +77,14 @@ const Navbar = () => {
           >
             <nav className="mobile-nav">
               {["Home", "Providers", "AI Consultation", "Appointments"].map((item, index) => (
-                <motion.a
-                  key={index}
-                  href="#"
-                  className="mobile-nav-item"
-                  onClick={toggleMenu}
-                  whileHover={{ scale: 1.1, color: "#50BFA5" }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  {item}
-                </motion.a>
+                <motion.div key={index} whileHover={{ scale: 1.1, color: "#50BFA5" }} transition={{ type: "spring", stiffness: 300 }}>
+                  <Link to={`/${item.toLowerCase().replace(/\s+/g, "-")}`} className="mobile-nav-item" onClick={toggleMenu}>
+                    {item}
+                  </Link>
+                </motion.div>
               ))}
-              <a href="#" className="btn-outline mobile-btn" onClick={toggleMenu}>Sign in</a>
-              <a href="#" className="btn-primary mobile-btn" onClick={toggleMenu}>Sign up</a>
+              <Link to="/signin" className="btn-outline mobile-btn" onClick={toggleMenu}>Sign in</Link>
+              <Link to="/signup" className="btn-primary mobile-btn" onClick={toggleMenu}>Sign up</Link>
             </nav>
           </motion.div>
         )}

@@ -1,12 +1,11 @@
 import { Route , Routes } from "react-router-dom";
-import Home from "../Components/Home/Home";
-import Login from "../Components/Login/Login";
+import SignupPage from "../Components/Pages/Signup_page";
 
 
 function CustomRoutes(){
     return(
         <Routes>
-            <Route path="/" element = {<Login/>}/>
+            <Route path="SignUp" element = {<SignupPage/>}/>
         </Routes>
     );
 }
