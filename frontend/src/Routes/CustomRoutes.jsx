@@ -9,7 +9,7 @@ function CustomRoutes() {
         <Routes>
             <Route path="/" element = {<Home/>}/>
             <Route path="SignUp" element = {<SignupPage/>}/>
-            <Route path="LoginPage" element = {<LoginPage/>}/>
+            <Route path="Login" element = {<LoginPage/>}/>
         </Routes>
     );
 };

@@ -42,7 +42,7 @@ const Signup = () => {
       setFormData({ name: "", email: "", password: "", hospital: "" });
       setRole(null); // Reset form after success
       // Redirect user to /home
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       alert("Error: " + error.message);
     }
