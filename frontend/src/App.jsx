@@ -1,10 +1,14 @@
 import React from 'react';
 import './App.css'
 import CustomRoutes from './Routes/CustomRoutes';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
-  return(
-    <CustomRoutes/>
+  return (
+    <AuthProvider>
+      <CustomRoutes />
+    </AuthProvider>
+
   );
 }
 
