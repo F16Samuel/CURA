@@ -51,6 +51,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",  # REQUIRED for session authentication
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",  # CSRF protection
+    "django.contrib.auth.middleware.AuthenticationMiddleware"
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -141,7 +146,47 @@ AUTH_USER_MODEL = 'api.CustomUser'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Adjust based on your React dev server
-    "http://localhost:5174"
+]
+    
+DEBUG = True
+
+CORS_ALLOW_CREDENTIALS = True
+
+
+
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # Default authentication backend
 ]
 
-DEBUG = True
+
+SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Ensure session storage is enabled
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False  # Change to True if using HTTPS
+SESSION_COOKIE_SAMESITE = "Lax"  # Ensures session is accessible
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ]
+}
+
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",  # React frontend
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # React frontend
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
+CORS_ALLOW_CREDENTIALS = True
