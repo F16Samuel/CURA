@@ -3,6 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import "./login.css"; // Import updated CSS
 
+// Function to get CSRF token from cookies
+const getCookie = (name) => {
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(name + "="))
+    ?.split("=")[1];
+  return cookieValue || "";
+};
+
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -29,19 +38,22 @@ const Login = () => {
     }
 
     try {
+      const csrfToken = getCookie("csrftoken"); // Get CSRF token from cookies
+
       const response = await fetch("http://127.0.0.1:8000/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken, // Include CSRF token
         },
+        credentials: "include", // ✅ Important for session-based authentication
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem("token", data.token);
-        navigate("/"); // Redirect to home without alert
+        navigate("/"); // ✅ Redirect to home on successful login
       } else {
         setError(data.message || "Invalid credentials");
       }
