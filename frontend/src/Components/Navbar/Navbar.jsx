@@ -35,21 +35,6 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  // Logout user and remove session from backend
-  const handleLogout = async () => {
-    try {
-      await fetch("http://your-backend-url.com/api/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-
-    localStorage.removeItem("user");
-    setUser(null);
-  };
-
   return (
     <motion.header
       className="navbar"
@@ -82,12 +67,7 @@ const Navbar = () => {
         {/* Authentication Section */}
         <div className="auth-buttons">
           {user ? (
-            <>
-              <motion.div className="welcome-msg">Welcome, {user.username}</motion.div>
-              <motion.button className="btn-outline" onClick={handleLogout} whileHover={{ scale: 1.05 }}>
-                Logout
-              </motion.button>
-            </>
+            <motion.div className="welcome-msg">Welcome, {user.username}</motion.div>
           ) : (
             <>
               <motion.div whileHover={{ scale: 1.05 }}>
@@ -120,12 +100,7 @@ const Navbar = () => {
               ))}
 
               {user ? (
-                <>
-                  <motion.div className="welcome-msg">Welcome, {user.username}</motion.div>
-                  <button className="btn-outline mobile-btn" onClick={() => { handleLogout(); toggleMenu(); }}>
-                    Logout
-                  </button>
-                </>
+                <motion.div className="welcome-msg">Welcome, {user.username}</motion.div>
               ) : (
                 <>
                   <Link to="/login" className="btn-outline mobile-btn" onClick={toggleMenu}>Log in</Link>
