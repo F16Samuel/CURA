@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, ConsultationSerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -68,3 +68,18 @@ class UserDetailView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class ConsultationView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data.copy()
+        data['user'] = request.user.id  # Assign logged-in user
+
+        serializer = ConsultationSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"success": True, "message": "Consultation submitted successfully!"}, status=status.HTTP_201_CREATED)
+        
+        return Response({"success": False, "errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

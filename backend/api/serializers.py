@@ -54,3 +54,13 @@ class LoginSerializer(serializers.Serializer):
                 }
             }
         raise serializers.ValidationError("Invalid username or password")
+
+
+from rest_framework import serializers
+from .models import Consultation
+
+class ConsultationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Consultation
+        fields = ['id', 'user', 'name', 'age', 'gender', 'previous_history', 'symptoms', 'created_at']
+        read_only_fields = ['user', 'created_at']
