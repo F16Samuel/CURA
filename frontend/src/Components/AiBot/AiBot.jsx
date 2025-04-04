@@ -9,7 +9,13 @@ const initialQuestions = [
   "What is your marital status?",
   "What is your height (in meters)?",
   "What is your weight (in kg)?",
+  "Personal history: Are you a smoker or non-smoker?",
+  "Alcohol/tobacco use and duration?",
+  "Past medical history: Have you had a similar problem in the past or any surgery?",
+  "Family history: Do you have a history of cancer, kidney stones, or headaches?",
+  "Current complaints (C/C):"
 ];
+
 
 const femaleSpecificQuestions = ["Is your menstrual cycle regular or irregular?"];
 
@@ -46,6 +52,7 @@ const AIChat = () => {
 
     let nextIndex = currentQuestionIndex + 1;
 
+    // Logic to add female-specific questions
     if (currentQuestionIndex === 2) {
       if (input.toLowerCase() === "female" && !questions.includes(femaleSpecificQuestions[0])) {
         setQuestions((prev) => [...prev, ...femaleSpecificQuestions]);
@@ -62,33 +69,47 @@ const AIChat = () => {
     }, 1000);
   };
 
+  const getCSRFToken = () => {
+    const csrfToken = document.cookie
+      .split(';')
+      .find(cookie => cookie.trim().startsWith('csrftoken='))
+      ?.split('=')[1];
+    return csrfToken;
+  };
+
   const handleSubmit = async () => {
-    const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML model response
-
-    const finalData = {
-      user_id: "12345", // Replace with actual user ID
-      responses: userResponses,
-      mlResult: responseFromML,
-    };
-
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
+      const response = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: 123,  // Example user ID
+          responses: {
+            "How are you feeling?": "Good",
+            "Do you have a fever?": "No"
+          },
+          mlResult: "No serious illness detected"
+        }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        console.log("API Response:", data);
-        if (data.report_id) {
-          setReportId(data.report_id);
-        } else {
-          alert("Error: No report_id received.");
-        }
-      } else {
-        alert("Error submitting the form.");
+      if (!response.ok) {
+        throw new Error(`Submission Error: ${response.statusText}`);
       }
+
+      // Handle the PDF response as a blob
+      const blob = await response.blob();
+      const pdfUrl = window.URL.createObjectURL(blob);
+
+      // Create a download link
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = "consultation_report.pdf"; // Set filename
+      document.body.appendChild(link);
+      link.click(); // Trigger download
+      document.body.removeChild(link); // Cleanup
+
     } catch (error) {
       console.error("Submission Error:", error);
     }
@@ -114,7 +135,7 @@ const AIChat = () => {
       {currentQuestionIndex >= questions.length ? (
         <div className="submit-container">
           <button className="submit-button" onClick={handleSubmit}>
-            Submit
+            Submit to doc
           </button>
           {reportId && (
             <a

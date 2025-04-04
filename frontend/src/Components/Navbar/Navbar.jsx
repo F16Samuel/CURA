@@ -31,9 +31,19 @@ const Navbar = () => {
   }, []);
 
 // Function to handle logout
+const fetchCSRFToken = async () => {
+  await fetch("http://localhost:8000/csrf/", {
+    method: "GET",
+    credentials: "include",
+  });
+};
+
 const handleLogout = async () => {
   try {
+    await fetchCSRFToken(); // ✅ Ensure CSRF token is fetched
+
     const csrfToken = getCookie("csrftoken");
+    console.log("CSRF Token:", csrfToken); // Debugging
 
     const response = await fetch("http://localhost:8000/logout/", {
       method: "POST",
@@ -49,7 +59,7 @@ const handleLogout = async () => {
       localStorage.removeItem("token");
       setUser(null);
       navigate("/login");
-      window.location.reload(); // ✅ Ensure navbar updates immediately
+      window.location.reload();
     } else {
       console.error("Logout failed:", await response.text());
     }
@@ -57,6 +67,7 @@ const handleLogout = async () => {
     console.error("Error:", error);
   }
 };
+
   
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);

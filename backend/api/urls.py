@@ -11,5 +11,7 @@ urlpatterns = [
     path("logout/", logout_view, name="logout"),
     path('api/save-consultation/', save_consultation, name='save-consultation'),
     path("api/generate-report/<int:report_id>/", generate_pdf, name="generate-pdf"),
+    path("csrf/", csrf_token_view, name="csrf_token"), 
+    path('api/diagnose-symptoms/', diagnose_symptoms, name='diagnose-symptoms'),
 
 ]
