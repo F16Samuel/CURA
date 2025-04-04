@@ -432,11 +432,18 @@ def generate_pdf(request, report_id):
         # Basic Information Section with modern table - non-italicized section title
         elements.append(Paragraph("Report Summary", section_title))
         elements.append(Spacer(1, 6))
-        
+        try:
+            ml_data = json.loads(report.ml_result)
+            predicted_diseases = ml_data.get("predicted_diseases", []) # Top 3
+            top_disease_names = ", ".join(d["disease"] for d in predicted_diseases)
+        except Exception:
+            top_disease_names = "N/A"
+
         user_info = [
             [Paragraph("<b>Report ID:</b>", body_text), Paragraph(str(report.id), body_text)],
-            [Paragraph("<b>ML Diagnosis:</b>", body_text), Paragraph(str(report.ml_result), body_text)],
+            [Paragraph("<b>ML Diagnosis:</b>", body_text), Paragraph(top_disease_names, body_text)],
         ]
+
 
         # Modern table with clean styling
         table = Table(user_info, colWidths=[2*inch, 4.5*inch])
@@ -780,3 +787,35 @@ user_input = "i have acidity, stomach pain and im tired all the time"
 symptom_keys = generate_symptoms(user_input)
 final_output = predict_disease(symptom_keys)
 print(final_output)
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+import ast
+
+# Assuming you already imported your model and context_string
+# And imported generate_symptoms, predict_disease
+
+@csrf_exempt
+def predict_disease_api(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_text = data.get("complaint", "")
+
+            if not user_text:
+                return JsonResponse({"error": "No complaint text provided."}, status=400)
+
+            symptom_keys = generate_symptoms(user_text)
+            predicted_condition = predict_disease(symptom_keys)
+
+            return JsonResponse({
+                "predicted_condition": predicted_condition,
+                "symptom_keys": symptom_keys
+            })
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)

@@ -83,35 +83,48 @@ const AIChat = () => {
   };
 
   const handleSubmit = async () => {
-    const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML response
-
-    const finalData = {
-      responses: userResponses,
-      mlResult: responseFromML,
-    };
+    const ccAnswer = userResponses["Current complaints (C/C):"];
+    console.log("🟡 Current Complaints (C/C):", ccAnswer);
 
     const csrfToken = getCSRFToken();
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
+      const res = await fetch("http://127.0.0.1:8000/api/predict-disease/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": csrfToken,
         },
-        body: JSON.stringify(finalData),
+        body: JSON.stringify({ complaint: ccAnswer }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        console.log("API Response:", data);
-        if (data.report_id) {
-          setReportId(data.report_id);
+        console.log("🧠 Prediction result:", data.predicted_condition);
+
+        const finalData = {
+          responses: userResponses,
+          mlResult: data.predicted_condition,
+          currentComplaint: ccAnswer
+        };
+
+        const saveRes = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify(finalData),
+        });
+
+        if (saveRes.ok) {
+          const saveData = await saveRes.json();
+          setReportId(saveData.report_id);
         } else {
-          alert("Error: No report_id received.");
+          alert("Failed to save consultation.");
         }
       } else {
-        alert("Error submitting the form.");
+        alert("Prediction API failed.");
       }
     } catch (error) {
       console.error("Submission Error:", error);
