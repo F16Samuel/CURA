@@ -16,7 +16,6 @@ const initialQuestions = [
   "Current complaints (C/C):"
 ];
 
-
 const femaleSpecificQuestions = ["Is your menstrual cycle regular or irregular?"];
 
 const AIChat = () => {
@@ -44,7 +43,10 @@ const AIChat = () => {
     if (!input.trim()) return;
 
     const userMessage = { sender: "User", text: input };
-    const updatedResponses = { ...userResponses, [questions[currentQuestionIndex]]: input };
+    const updatedResponses = {
+      ...userResponses,
+      [questions[currentQuestionIndex]]: input,
+    };
 
     setMessages((prev) => [...prev, userMessage]);
     setUserResponses(updatedResponses);
@@ -52,16 +54,20 @@ const AIChat = () => {
 
     let nextIndex = currentQuestionIndex + 1;
 
-    // Logic to add female-specific questions
-    if (currentQuestionIndex === 2) {
-      if (input.toLowerCase() === "female" && !questions.includes(femaleSpecificQuestions[0])) {
-        setQuestions((prev) => [...prev, ...femaleSpecificQuestions]);
-      }
+    if (
+      currentQuestionIndex === 2 &&
+      input.toLowerCase() === "female" &&
+      !questions.includes(femaleSpecificQuestions[0])
+    ) {
+      setQuestions((prev) => [...prev, ...femaleSpecificQuestions]);
     }
 
     setTimeout(() => {
       if (nextIndex < questions.length) {
-        setMessages((prev) => [...prev, { sender: "AI", text: questions[nextIndex] }]);
+        setMessages((prev) => [
+          ...prev,
+          { sender: "AI", text: questions[nextIndex] },
+        ]);
         setCurrentQuestionIndex(nextIndex);
       } else {
         setCurrentQuestionIndex(questions.length);
@@ -70,46 +76,43 @@ const AIChat = () => {
   };
 
   const getCSRFToken = () => {
-    const csrfToken = document.cookie
-      .split(';')
-      .find(cookie => cookie.trim().startsWith('csrftoken='))
-      ?.split('=')[1];
-    return csrfToken;
+    return document.cookie
+      .split(";")
+      .find((cookie) => cookie.trim().startsWith("csrftoken="))
+      ?.split("=")[1];
   };
 
   const handleSubmit = async () => {
+    const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML response
+
+    const finalData = {
+      responses: userResponses,
+      mlResult: responseFromML,
+    };
+
+    const csrfToken = getCSRFToken();
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
+      const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
         },
-        body: JSON.stringify({
-          user_id: 123,  // Example user ID
-          responses: {
-            "How are you feeling?": "Good",
-            "Do you have a fever?": "No"
-          },
-          mlResult: "No serious illness detected"
-        }),
+        body: JSON.stringify(finalData),
       });
 
-      if (!response.ok) {
-        throw new Error(`Submission Error: ${response.statusText}`);
+      if (res.ok) {
+        const data = await res.json();
+        console.log("API Response:", data);
+        if (data.report_id) {
+          setReportId(data.report_id);
+        } else {
+          alert("Error: No report_id received.");
+        }
+      } else {
+        alert("Error submitting the form.");
       }
-
-      // Handle the PDF response as a blob
-      const blob = await response.blob();
-      const pdfUrl = window.URL.createObjectURL(blob);
-
-      // Create a download link
-      const link = document.createElement("a");
-      link.href = pdfUrl;
-      link.download = "consultation_report.pdf"; // Set filename
-      document.body.appendChild(link);
-      link.click(); // Trigger download
-      document.body.removeChild(link); // Cleanup
-
     } catch (error) {
       console.error("Submission Error:", error);
     }

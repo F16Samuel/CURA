@@ -15,7 +15,7 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []  # Remove username from required fields
 
-    def __str__(self):
+    def _str_(self):
         return f"{self.email} - {self.role}"
 
 
@@ -35,7 +35,7 @@ class CustomUser(AbstractUser):
 
 #     created_at = models.DateTimeField(auto_now_add=True)
 
-#     def __str__(self):
+#     def _str_(self):
 #         return f"Consultation for {self.name} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
 
 
@@ -45,5 +45,5 @@ class ConsultationReport(models.Model):
     ml_result = models.TextField(default="Not Available")
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def _str_(self):
         return f"Consultation Report {self.id} - User {self.user.email}"
