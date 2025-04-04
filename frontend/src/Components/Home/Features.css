@@ -1,3 +1,4 @@
+/* Features Section */
 .features-section {
     margin-top: 4rem;
     width: 100%;
@@ -59,7 +60,37 @@
     line-height: 1.6;
 }
 
-/* Responsive Design */
+/* 🔹 Responsive Design for 1024px */
+@media (max-width: 1024px) {
+    .features-section {
+        max-width: 70%;
+        padding: 3rem 1.5rem;
+    }
+
+    .features-title {
+        font-size: 2rem;
+        margin-bottom: 1.8rem;
+    }
+
+    .features-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.3rem;
+    }
+
+    .feature-card {
+        padding: 1.3rem;
+    }
+
+    .feature-title {
+        font-size: 1.4rem;
+    }
+
+    .feature-description {
+        font-size: 0.95rem;
+    }
+}
+
+/* 🔹 Responsive Design for 768px */
 @media (max-width: 768px) {
     .features-section {
         max-width: 80%;
@@ -89,6 +120,7 @@
     }
 }
 
+/* 🔹 Responsive Design for 480px */
 @media (max-width: 480px) {
     .features-title {
         font-size: 1.7rem;

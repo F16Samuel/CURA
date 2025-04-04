@@ -78,37 +78,38 @@ const AIChat = () => {
   };
 
   const handleSubmit = async () => {
-    const responseFromML = "Predicted Condition: Fever"; // Replace with actual ML model response
-
-    const finalData = {
-      // user_id: "12345", // Replace with actual user ID
-      responses: userResponses,
-      mlResult: responseFromML,
-    };
-
-    const csrfToken = getCSRFToken();
-
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
+      const response = await fetch("http://127.0.0.1:8000/api/save-consultation/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": csrfToken,  // Include CSRF token in request header
         },
-        body: JSON.stringify(finalData),
+        body: JSON.stringify({
+          user_id: 123,  // Example user ID
+          responses: {
+            "How are you feeling?": "Good",
+            "Do you have a fever?": "No"
+          },
+          mlResult: "No serious illness detected"
+        }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        console.log("API Response:", data);
-        if (data.report_id) {
-          setReportId(data.report_id);
-        } else {
-          alert("Error: No report_id received.");
-        }
-      } else {
-        alert("Error submitting the form.");
+      if (!response.ok) {
+        throw new Error(`Submission Error: ${response.statusText}`);
       }
+
+      // Handle the PDF response as a blob
+      const blob = await response.blob();
+      const pdfUrl = window.URL.createObjectURL(blob);
+
+      // Create a download link
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.download = "consultation_report.pdf"; // Set filename
+      document.body.appendChild(link);
+      link.click(); // Trigger download
+      document.body.removeChild(link); // Cleanup
+
     } catch (error) {
       console.error("Submission Error:", error);
     }

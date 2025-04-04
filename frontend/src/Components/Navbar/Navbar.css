@@ -129,9 +129,31 @@
   .mobile-btn {
     text-align: center;
   }
+
+  .btn-logout{
+    margin-left: 1rem;
+    width: 4rem;
+    background: #50BFA5;
+    color: white;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.3s ease, transform 0.2s ease;
+  }
+
+  .btn-logout:hover{
+    background: #3ca58a; /* Darker shade on hover */
+    transform: scale(1.05); /* Slight zoom effect */
+  }
+
+  .welcome-msg{
+    display: flex;
+    padding-top: 0.4rem;
+  }
   
   /* Responsive Design */
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .nav-links,
     .auth-buttons {
       display: none;

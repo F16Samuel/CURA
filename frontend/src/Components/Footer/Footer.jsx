@@ -1,35 +1,54 @@
+import React from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "framer-motion"; // <-- import framer motion
 import "./Footer.css";
 
 const Footer = () => {
   return (
-    <motion.footer 
-      className="footer-container"
+    <motion.footer
+      className="footer"
       initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
     >
-      <div className="footer-content">
-        <div className="footer-brand">
-          <span className="footer-brand-name">CURA</span>
-          <p className="footer-description">
-            Your gateway to telemedicine and AI-powered healthcare solutions.</p>
+      <div className="footer-container">
+        {/* Logo */}
+        <motion.div
+          className="footer-logo"
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <div className="logo-icon">C</div>
+          <Link to={"/home"}><span className="footer-logo-text">CURA</span></Link>
+        </motion.div>
+
+        {/* Navigation Links */}
+        <div className="footer-links">
+          {[
+            { to: "/", label: "Home" },
+            { to: "/providers", label: "Provider" },
+            { to: "/ai-consultation", label: "AI Consultation" },
+            { to: "/appointments", label: "Appointment" },
+          ].map((link, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ scale: 1.1, color: "teal" }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link to={link.to}>{link.label}</Link>
+            </motion.div>
+          ))}
         </div>
 
-        <div className="footer-services">
-          <h3>Services</h3>
-          <ul>
-            <li><Link to="/providers">Find Providers</Link></li>
-            <li><Link to="/ai-consult">AI Consultation</Link></li>
-            <li><Link to="/appointments">Schedule Appointment</Link></li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="footer-bottom">
-        <p>&copy; {new Date().getFullYear()} CURA. All rights reserved.</p>
+        {/* Footer bottom text */}
+        <motion.div
+          className="footer-bottom"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          &copy; {new Date().getFullYear()} CURA. All rights reserved.
+        </motion.div>
       </div>
     </motion.footer>
   );
