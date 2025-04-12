@@ -1,5 +1,5 @@
 import Navbar from "../Navbar/Navbar"
-import Providers from "../Provider/provider";
+import Providers from "../Provider/Provider";
 import Footer from "../Footer/Footer";
 
 function Provider_page(){
