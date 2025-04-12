@@ -11,7 +11,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "703b-115-245-68-163.ngrok-free.app",
     "6ead-115-245-68-163.ngrok-free.app",
-    "https://cura-3sap.onrender.com",
+    "cura-3sap.onrender.com",
 ]
 
 # 🔹 Installed apps
