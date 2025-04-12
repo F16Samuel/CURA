@@ -94,6 +94,8 @@ CORS_ALLOWED_ORIGINS = [
     "https://703b-115-245-68-163.ngrok-free.app",
     "https://6ead-115-245-68-163.ngrok-free.app",
     "https://cura-3sap.onrender.com",
+    "https://cura-38josq14k-f16samuels-projects.vercel.app",  # ✅ your frontend domain
+    "https://cura-omega.vercel.app",  # if this is also used
 ]
 
 CSRF_TRUSTED_ORIGINS = [
