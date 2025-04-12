@@ -11,6 +11,7 @@ ALLOWED_HOSTS = [
     "localhost",
     "703b-115-245-68-163.ngrok-free.app",
     "6ead-115-245-68-163.ngrok-free.app",
+    "https://cura-3sap.onrender.com",
 ]
 
 # 🔹 Installed apps
@@ -92,6 +93,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5174",  # ✅ Allow React frontend on 5174
     "https://703b-115-245-68-163.ngrok-free.app",
     "https://6ead-115-245-68-163.ngrok-free.app",
+    "https://cura-3sap.onrender.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -99,6 +101,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5174",  # ✅ Trust frontend on 5174
     "https://703b-115-245-68-163.ngrok-free.app",
     "https://6ead-115-245-68-163.ngrok-free.app",
+    "https://cura-3sap.onrender.com",
 ]
 
 

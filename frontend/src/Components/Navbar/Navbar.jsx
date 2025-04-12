@@ -32,7 +32,7 @@ const Navbar = () => {
 
 // Function to handle logout
 const fetchCSRFToken = async () => {
-  await fetch("http://localhost:8000/csrf/", {
+  await fetch("http://cura-3sap.onrender.com/csrf/", {
     method: "GET",
     credentials: "include",
   });
@@ -45,7 +45,7 @@ const handleLogout = async () => {
     const csrfToken = getCookie("csrftoken");
     console.log("CSRF Token:", csrfToken); // Debugging
 
-    const response = await fetch("http://localhost:8000/logout/", {
+    const response = await fetch("https://cura-3sap.onrender.com/logout/", {
       method: "POST",
       credentials: "include",
       headers: {

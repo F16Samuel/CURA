@@ -25,7 +25,7 @@ const Signup = () => {
     setError(null);
     setLoading(true);
 
-    const endpoint = "http://127.0.0.1:8000/register/";
+    const endpoint = "http://cura-3sap.onrender.com/register/";
 
     // Only include hospital if the user is a doctor
     const data = {
